@@ -4,7 +4,7 @@
 
 all: sender receiver
 
-sender:
+sender: sender.c bno055.h imu_types.h
 	gcc sender.c -o sender -lwiringPi
 
 receiver:

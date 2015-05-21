@@ -12,7 +12,7 @@
 
 #define DEFAULT_PORT    5300
 #define BUFLEN          128
-#define SRV_IP          "127.0.0.1"
+#define SRV_IP          "10.0.1.8"
 #define SLEEP_US        50
 
 void die_with_error(char *s) {
@@ -47,8 +47,9 @@ int bno055Init() {
   wiringPiI2CWriteReg8(imuHandle, BNO055_PWR_MODE_ADDR, POWER_MODE_NORMAL);
   usleep(20);
 
-  /*  */
+  /* set address page */
   wiringPiI2CWriteReg8(imuHandle, BNO055_PAGE_ID_ADDR, 0x00);
+  usleep(20);
 
   wiringPiI2CWriteReg8(imuHandle, BNO055_SYS_TRIGGER_ADDR, 0x00);
   usleep(20);
@@ -114,8 +115,10 @@ int main(int argc, char *argv[]) {
   if (sendto(socketFd, buf, BUFLEN, 0, (struct sockaddr*) &si_receiver, slen_receiver) == -1)
     die_with_error("Failed sendto()");
 
+  bno055Init();
+
   while (1) {
-    quaternion = readBNO055Quaternion(imuHandle);
+    quaternion = bno055ReadQuaternion();
     printf("Quaternion values: %f, %f, %f, %f\n", quaternion.w, quaternion.x, quaternion.y, quaternion.z);
     sprintf(buf, "%a %a %a %a", quaternion.w, quaternion.x, quaternion.y, quaternion.z);
     if (sendto(socketFd, buf, BUFLEN, 0, (struct sockaddr*) &si_receiver, slen_receiver) == -1)
@@ -124,6 +127,6 @@ int main(int argc, char *argv[]) {
   }  
 
   /* Will never reach here... */
-  close(s);
+  close(socketFd);
   return 0;
 }
