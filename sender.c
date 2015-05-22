@@ -1,15 +1,31 @@
+/*
+ * sender.c
+ *
+ * Connects to BNO055 IMU over the RPi UART.
+ * Transmits quaternions in UDP packets to SRV_IP 
+ * every SLEEP_US microseconds.
+ *
+ * Inspired by Adafruit library for the BNO055 and by WiringPi.
+ *
+ * Written 2015 by Torkel Danielsson
+ */
+
 #include <arpa/inet.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wiringSerial.h>
-#include <inttypes.h>
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "imu_types.h"
 #include "bno055.h"
 
 
+#define SERIAL_PORT          "/dev/ttyAMA0"
 #define DEFAULT_PORT         5300
 #define BUFLEN               128
 #define SRV_IP               "10.0.1.8"
@@ -177,10 +193,40 @@ int bno055PrintStatus() {
 
 int bno055Init() {
   uint8_t data;
+  struct termios options;
+  speed_t baud = B115200;
+  int status;
 
-  fd = serialOpen("/dev/ttyAMA0", 115200);
-  if (fd == -1)
+  if ((fd = open (SERIAL_PORT, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK)) == -1)
     die_with_error("Cannot open serial port to device");  
+
+  fcntl (fd, F_SETFL, O_RDWR);
+
+  tcgetattr (fd, &options);
+
+  cfmakeraw   (&options);
+  cfsetispeed (&options, baud);
+  cfsetospeed (&options, baud);
+
+  options.c_cflag |= (CLOCAL | CREAD);
+  options.c_cflag &= ~PARENB;
+  options.c_cflag &= ~CSTOPB;
+  options.c_cflag &= ~CSIZE;
+  options.c_cflag |= CS8;
+  options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+  options.c_oflag &= ~OPOST;
+
+  options.c_cc[VMIN] = 0;
+  options.c_cc[VTIME] = 1 ; // 0.1s read timeout
+
+  tcsetattr (fd, TCSANOW | TCSAFLUSH, &options) ;
+
+  ioctl (fd, TIOCMGET, &status);
+
+  status |= TIOCM_DTR ;
+  status |= TIOCM_RTS ;
+
+  ioctl (fd, TIOCMSET, &status);
 
   if (bno055Read(BNO055_CHIP_ID_ADDR, &data) == -1)
     die_with_error("Error reading from device");

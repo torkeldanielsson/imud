@@ -5,8 +5,6 @@
  * Defines for the BNO055 
  */
 
- /* I2C address etc */
-
 #define BNO055_ADDRESS_A                  (0x28)
 #define BNO055_ADDRESS_B                  (0x29)
 #define BNO055_ID                         (0xA0)

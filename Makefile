@@ -5,7 +5,7 @@
 all: sender receiver
 
 sender: sender.c bno055.h imu_types.h
-	gcc -Wall sender.c -o sender -lwiringPi
+	gcc -Wall sender.c -o sender
 
 receiver: bno055.h imu_types.h receiver.cpp imu_receiver.cpp imu_receiver.h
 	g++ -Wall -std=c++11  imu_receiver.cpp -c
