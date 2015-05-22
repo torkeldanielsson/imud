@@ -217,7 +217,7 @@ int bno055Init() {
   options.c_oflag &= ~OPOST;
 
   options.c_cc[VMIN] = 0;
-  options.c_cc[VTIME] = 1 ; // 0.1s read timeout
+  options.c_cc[VTIME] = 10 ; // 1s read timeout
 
   tcsetattr (fd, TCSANOW | TCSAFLUSH, &options) ;
 
