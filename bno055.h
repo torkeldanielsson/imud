@@ -16,9 +16,6 @@
 
 #define BNO055_CHIP_ID_ADDR               (0x00)
 #define BNO055_PAGE_ID_ADDR               (0x07)
-#define BNO055_SYS_TRIGGER_ADDR           (0x3F)
-#define BNO055_OPR_MODE_ADDR              (0x3D)
-#define BNO055_PWR_MODE_ADDR              (0x3E)
 #define BNO055_QUATERNION_DATA_W_LSB_ADDR (0x20)
 #define BNO055_QUATERNION_DATA_W_MSB_ADDR (0x21)
 #define BNO055_QUATERNION_DATA_X_LSB_ADDR (0x22)
@@ -28,6 +25,14 @@
 #define BNO055_QUATERNION_DATA_Z_LSB_ADDR (0x26)
 #define BNO055_QUATERNION_DATA_Z_MSB_ADDR (0x27)
 #define BNO055_TEMP_ADDR                  (0x34)
+#define BNO055_ST_RESULT_ADDR             (0x36)
+#define BNO055_SYS_CLK_STATUS_ADDR        (0x38)
+#define BNO055_SYS_STATUS_ADDR            (0x39)
+#define BNO055_SYS_ERR_ADDR               (0x3A)
+#define BNO055_OPR_MODE_ADDR              (0x3D)
+#define BNO055_PWR_MODE_ADDR              (0x3E)
+#define BNO055_SYS_TRIGGER_ADDR           (0x3F)
+#define BNO055_TEMP_SOURCE_ADDR           (0x40)
 
  /* Modes */
 
