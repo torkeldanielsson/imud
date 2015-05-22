@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 		quaternion = imuReceiver.getQuaternion();
 
     	printf("quaternion: %f %f %f %f\n", quaternion.w, quaternion.x, quaternion.y, quaternion.z);
-    	sleep(3);
+    	usleep(80000);
     }
 
     // Terminate the reception thread:
