@@ -1,131 +1,84 @@
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <cstdlib>
-#include <string.h>
-#include <thread>
 #include <iostream>
-#include <sys/socket.h>
+#include <thread>
+#include <boost/asio.hpp>
 
 #include "imu_receiver.h"
 
 
+using boost::asio::ip::udp;
+
+
 IMUReceiver::IMUReceiver(int port) 
 {
-	mPort = port;
-	mqIMUData.w = 1.0f;
-	mqIMUData.x = 1.0f;
-	mqIMUData.y = 0.0f;
-	mqIMUData.z = 0.0f;
-	mStopFlag = false;
+  mqIMUData.w = 1.2f; // test data, to know if we're receiving something...
+  mqIMUData.x = 3.4f;
+  mqIMUData.y = 5.6f;
+  mqIMUData.z = 7.8f;
+  mStopFlag = false;
+  mPort = port;
 }
 
 
 void IMUReceiver::run() 
 {
-	struct sockaddr_in msiReceiver;
-
-	if ((mSocketFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) 
-	{
-		/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
-		 * TODO Implement proper error handling for Oden!
-		 */
-		perror("IMUReceiver: Failed to create UDP socket");
-  		exit(1);
-	}
-
-	memset((char *) &msiReceiver, 0, sizeof(msiReceiver));
-	msiReceiver.sin_family = AF_INET;
-	msiReceiver.sin_port = htons(mPort);
-	msiReceiver.sin_addr.s_addr = htonl(INADDR_ANY);
-
-	if (bind(mSocketFd, (struct sockaddr*) &msiReceiver, sizeof(msiReceiver)) == -1) 
-	{
-		/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
-		 * TODO Implement proper error handling for Oden!
-		 */
-		perror("IMUReceiver: Failed to bind UDP socket");
-  		exit(1);
-	}
-
-	struct timeval tv;
-	tv.tv_sec = 0;
-	tv.tv_usec = 500000;
-	if (setsockopt(mSocketFd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) == -1) 
-	{
-		/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
-		 * TODO Implement proper error handling for Oden!
-		 */
-		perror("IMUReceiver: Failed to set socket options");
-  		exit(1);
-	}
-
-	mReceptionThread = std::thread(&IMUReceiver::loop, this);
+  mReceptionThread = std::thread(&IMUReceiver::loop, this);
 }
 
 void IMUReceiver::stop()
 {
-	mStopFlag = true;
+  mStopFlag = true;
 
-	if (mReceptionThread.joinable())
-	{
-		mReceptionThread.join();
-	}
+  if (mReceptionThread.joinable())
+  {
+    mReceptionThread.join();
+  }
 }
 
 
 quaternion_t IMUReceiver::getQuaternion()
 {
-	mIMUDataMutex.lock();
-	quaternion_t retVal = mqIMUData;
-	mIMUDataMutex.unlock();
+  mIMUDataMutex.lock();
+  quaternion_t retVal = mqIMUData;
+  mIMUDataMutex.unlock();
 
-	return retVal;
+  return retVal;
 }
 
 	
 void IMUReceiver::loop()
 {
-	struct sockaddr_in msiSender;
-	socklen_t slen_sender = sizeof(msiSender);
-	int n;
-	float w, x, y, z;
+  int n;
+  float w, x, y, z;
+  udp::endpoint sender_endpoint;
 
-	while (1) 
-	{
-		if (recvfrom(mSocketFd, mBuffer, BUFLEN, 0, (struct sockaddr*) &msiSender, &slen_sender) == -1) 
-		{
-			if (errno == EAGAIN || EWOULDBLOCK)
-			{
-				if (mStopFlag)
-					break; // terminate thread
-				else
-					continue;
-			}
-			else
-			{
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
-				 * TODO Implement proper error handling for Oden!
-				 */
-				perror("IMUReceiver: Failed in recvfrom()");
-  				exit(1);
-  			}
-		} 
-		else 
-		{
-			//printf("IMUReceiver: Received packet from %s:%d\nData: %s\n", inet_ntoa(msiSender.sin_addr), ntohs(msiSender.sin_port), mBuffer);
-			n = sscanf(mBuffer, "%a %a %a %a", &w, &x, &y, &z);
-			if (n == 4)
-			{
-				mIMUDataMutex.lock();
-				mqIMUData.w = w;
-				mqIMUData.x = x;
-				mqIMUData.y = y;
-				mqIMUData.z = z;
-				mIMUDataMutex.unlock();
-			}
-		}
-	}
+  try
+  {
+    boost::asio::io_service io_service;
+    udp::socket sock(io_service, udp::endpoint(udp::v4(), mPort));
 
-	close(mSocketFd);
+    for (;;)
+    {
+      sock.receive_from(boost::asio::buffer(mBuffer, BUFLEN), sender_endpoint);
+
+      n = sscanf(mBuffer, "%a %a %a %a", &w, &x, &y, &z);
+      if (n == 4)
+      {
+        mIMUDataMutex.lock();
+        mqIMUData.w = w;
+        mqIMUData.x = x;
+        mqIMUData.y = y;
+        mqIMUData.z = z;
+        mIMUDataMutex.unlock();
+      }
+
+      if (mStopFlag)
+        break; // terminate thread
+      else
+        continue;
+    }
+  }
+  catch (std::exception& e)
+  {
+    std::cerr << "Exception: " << e.what() << "\n";
+  }
 }
