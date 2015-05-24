@@ -196,6 +196,7 @@ int bno055Init() {
   struct termios options;
   speed_t baud = B115200;
   int status;
+  int count = 0;
 
   if ((fd = open (SERIAL_PORT, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK)) == -1)
     die_with_error("Cannot open serial port to device");  
@@ -228,8 +229,12 @@ int bno055Init() {
 
   ioctl (fd, TIOCMSET, &status);
 
-  if (bno055Read(BNO055_CHIP_ID_ADDR, &data) == -1)
-    die_with_error("Error reading from device");
+  while (bno055Read(BNO055_CHIP_ID_ADDR, &data) == -1) {
+    /* we may get"WRONG_START_BYTE" after reboots */
+    tcflush(fd, TCIOFLUSH);
+    if (++count > 10)
+      die_with_error("Error reading from device");
+  }
   if (data != BNO055_ID) {
     printf("data: 0x%1x\n", data);
     die_with_error("Wrong IMU device ID");
@@ -293,10 +298,10 @@ int bno055ReadQuaternion(quaternion_t *quaternion) {
     }
   }
 
-  quaternion->w = (((uint16_t)response[3]) << 8) | ((uint16_t)response[2]);
-  quaternion->x = (((uint16_t)response[5]) << 8) | ((uint16_t)response[4]);
-  quaternion->y = (((uint16_t)response[7]) << 8) | ((uint16_t)response[6]);
-  quaternion->z = (((uint16_t)response[9]) << 8) | ((uint16_t)response[8]);
+  quaternion->w = (int16_t)(((uint16_t)response[3]) << 8) | ((uint16_t)response[2]);
+  quaternion->x = (int16_t)(((uint16_t)response[5]) << 8) | ((uint16_t)response[4]);
+  quaternion->y = (int16_t)(((uint16_t)response[7]) << 8) | ((uint16_t)response[6]);
+  quaternion->z = (int16_t)(((uint16_t)response[9]) << 8) | ((uint16_t)response[8]);
 
   printf("bno055ReadQuaternion(): raw data: ");
   for (i=2; i<10; ++i)
