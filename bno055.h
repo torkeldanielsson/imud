@@ -3,6 +3,11 @@
 
 /* 
  * Defines for the BNO055 
+ *
+ * Inspired by Adafruit library for the BNO055.
+ * (but mostly taken from the BNO055 datasheet)
+ *
+ * Written 2015 by Torkel Danielsson
  */
 
 #define BNO055_ADDRESS_A                  (0x28)

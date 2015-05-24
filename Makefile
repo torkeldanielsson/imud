@@ -20,4 +20,4 @@ gl_test: bno055.h imu_types.h gl_test.cpp imu_receiver.cpp imu_receiver.h
 	g++  -std=c++11 -w gl_test.cpp -o gl_test imu_receiver.o $(INCLUDES) $(LIBS) -framework GLUT -framework OpenGL
 
 clean:
-	rm -f *.o *~ sender receiver
+	rm -f *.o *~ sender receiver gl_test

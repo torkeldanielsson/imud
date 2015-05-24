@@ -7,6 +7,10 @@
  *
  * Inspired by Adafruit library for the BNO055 and by WiringPi.
  *
+ * N.B. 
+ * The BNO055 uses "clock stretching" on I2C so on the RPi
+ * we need to connect it over UART. (I2C doesn't work on RPi)
+ *
  * Written 2015 by Torkel Danielsson
  */
 

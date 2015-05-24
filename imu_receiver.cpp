@@ -1,3 +1,11 @@
+/*
+ * IMUReceiver
+ *
+ * Receives IMU data as quaternions over UDP.
+ *
+ * Written 2015 by Torkel Danielsson
+ */
+
 #include <iostream>
 #include <thread>
 #include <boost/asio.hpp>

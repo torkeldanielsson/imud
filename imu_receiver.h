@@ -2,10 +2,16 @@
 #define IMU_RECEIVER_H
 
 /*
- * Receives UDP packets with IMU data, which can be queried with
+ * IMUReceiver
+ *
+ * Receives UDP packets with IMU data (as quaternions), which can be queried with
  * getQuaternion().
- * Needs a call to run() to start reception thread.
+ *
+ * Needs a call to run() to start the reception thread.
+ *
+ * Written 2015 by Torkel Danielsson
  */
+
 
 #include <thread>
 

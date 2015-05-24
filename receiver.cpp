@@ -1,5 +1,7 @@
 /*
  * Example showing how to use IMUReceiver.
+ *
+ * Written 2015 by Torkel Danielsson
  */
 
 #include <iostream>

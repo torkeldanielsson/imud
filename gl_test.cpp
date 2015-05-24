@@ -1,3 +1,15 @@
+/*
+ * This is a horribly ugly test code to get a cube spinning when the IMU moves.
+ * I checked it in to have as a backup to test if the IMU works as wanted...
+ * I think it only compiles on mac (because GLUT not GL) (works on Yosemite 2015-05-24)
+ *
+ * Most of it is taken from an old demo code I found, I left the original header 
+ * (GPL) as is below.
+ * 
+ * - Torkel Danielsson
+ */
+
+
 /* ============================================================================
 **
 ** Demonstration of spinning cube
@@ -18,6 +30,7 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 **
 ** ========================================================================= */
+
 
 #include  <iostream>
 #include  <stdlib.h>
